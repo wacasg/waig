@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>店長、助けて！ ― AIと決める3ターン</title>
+<style>
+  /* =========================================================
+     ▼▼▼ 先生へ：ここだけ書き換えれば出前授業バナーが変わります ▼▼▼
+     文言は HTML 末尾の <script> 内 CONFIG にまとまっています。
+     ▲▲▲
+     ========================================================= */
+
+  :root{
+    --bg:#E9EEF7;
+    --bg-grad-1:#2D6CDF;
+    --bg-grad-2:#5B3FD6;
+    --card:#FFFFFF;
+    --ink:#15213E;
+    --muted:#5C6884;
+    --line:#DBE3F0;
+    --brand:#2D6CDF;
+    --up:#11B981;
+    --down:#EF5B6E;
+    --trend:#F59E0B;
+    --ai:#8B5CF6;
+    --kya:#2D6CDF; /* 集客 */
+    --tsu:#11B981; /* 使いやすさ */
+    --kai:#F2557B; /* 買いたい度 */
+    --display:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Courier New",monospace;
+    --r:18px;
+    --shadow:0 10px 30px rgba(21,33,62,.10);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--display);
+    color:var(--ink);
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(91,63,214,.10), transparent 60%),
+      var(--bg);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+    min-height:100dvh;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:18px 16px 40px;
+  }
+
+  /* ---------- shared ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    box-shadow:var(--shadow);
+    padding:18px;
+  }
+  .eyebrow{
+    font-size:12px;letter-spacing:.14em;font-weight:800;
+    color:var(--brand);text-transform:uppercase;
+  }
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;border:none;border-radius:14px;cursor:pointer;
+    font-family:var(--display);font-weight:800;font-size:17px;
+    padding:15px 18px;color:#fff;background:var(--brand);
+    box-shadow:0 6px 16px rgba(45,108,223,.30);
+    transition:transform .12s ease, box-shadow .12s ease, background .15s;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:3px solid #16213E33;outline-offset:2px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+  .btn-ghost{
+    background:#fff;color:var(--brand);
+    border:2px solid var(--brand);box-shadow:none;
+  }
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* ---------- title screen ---------- */
+  .hero{
+    border-radius:24px;color:#fff;padding:30px 22px 26px;text-align:center;
+    background:linear-gradient(150deg,var(--bg-grad-1),var(--bg-grad-2));
+    box-shadow:0 18px 40px rgba(45,63,170,.32);
+    position:relative;overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;inset:auto -40px -60px auto;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);
+  }
+  .hero .badge{
+    display:inline-block;font-size:12px;font-weight:800;letter-spacing:.12em;
+    background:rgba(255,255,255,.18);padding:5px 12px;border-radius:999px;margin-bottom:14px;
+  }
+  .hero h1{font-size:30px;line-height:1.25;margin:0 0 6px;font-weight:800;letter-spacing:.01em}
+  .hero h1 .accent{color:#FFD66B}
+  .hero p{margin:8px 0 0;font-size:14.5px;color:#EAEAFF;opacity:.95}
+  .speech{
+    margin:18px 0;text-align:left;background:#fff;color:var(--ink);
+    border-radius:16px;padding:16px 16px 14px;position:relative;box-shadow:var(--shadow);
+  }
+  .speech .who{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
+  .speech p{margin:0;font-size:15px;color:var(--ink)}
+  .meta{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .pill{font-size:12px;font-weight:700;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+
+  /* ---------- dashboard ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .topbar .turntag{font-size:13px;font-weight:800;color:var(--muted)}
+  .dots{display:flex;gap:6px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+  .dot.on{background:var(--brand)}
+  .dot.done{background:var(--up)}
+
+  .sales{padding:16px 18px 18px;margin-bottom:12px}
+  .sales .label{font-size:12.5px;font-weight:800;color:var(--muted);letter-spacing:.04em}
+  .sales .yen{font-size:36px;font-weight:800;line-height:1.1;margin:2px 0 2px;letter-spacing:.01em}
+  .sales .yen small{font-size:16px;font-weight:800;margin-left:2px}
+  .delta{font-family:var(--mono);font-weight:700;font-size:14px;margin-left:8px}
+  .delta.up{color:var(--up)} .delta.down{color:var(--down)}
+  .salesbar{position:relative;height:14px;border-radius:999px;background:#EEF1F8;margin-top:12px;overflow:hidden}
+  .salesfill{position:absolute;inset:0 auto 0 0;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#2D6CDF,#5B3FD6);transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .goalmark{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px}
+  .goaltxt{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-weight:700;margin-top:6px}
+
+  .meters{display:grid;gap:10px;margin-bottom:14px}
+  .meter{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px}
+  .meter .head{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;font-weight:800}
+  .meter .head .v{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .track{height:9px;border-radius:999px;background:#EEF1F8;margin-top:8px;overflow:hidden}
+  .fill{height:100%;width:0;border-radius:999px;transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .m-kya .fill{background:var(--kya)} .m-tsu .fill{background:var(--tsu)} .m-kai .fill{background:var(--kai)}
+  .mpop{font-family:var(--mono);font-size:12px;font-weight:700;margin-left:6px;opacity:0;transition:opacity .3s}
+  .mpop.show{opacity:1}
+  .mpop.up{color:var(--up)} .mpop.flat{color:var(--muted)}
+
+  /* ---------- event + actions ---------- */
+  .event{
+    border-left:5px solid var(--trend);background:#FFF8EC;border-radius:14px;
+    padding:13px 15px;margin-bottom:14px;
+  }
+  .event .tag{font-size:11px;font-weight:800;color:#B9760C;letter-spacing:.1em}
+  .event h3{margin:3px 0 4px;font-size:16px}
+  .event p{margin:0;font-size:13.5px;color:#6B5526}
+
+  .q{font-size:15px;font-weight:800;margin:2px 0 10px}
+  .actions{display:grid;gap:10px}
+  .action{
+    text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;
+    padding:13px 14px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;
+    font-family:var(--display);
+  }
+  .action:hover{border-color:var(--brand);background:#F7FAFF}
+  .action:active{transform:scale(.99)}
+  .action:focus-visible{outline:3px solid #2D6CDF44;outline-offset:2px}
+  .action.sel{border-color:var(--brand);background:#EEF4FF}
+  .action .t{font-size:15px;font-weight:800;margin:0 0 2px;display:flex;align-items:center;gap:7px}
+  .action .d{font-size:12.5px;color:var(--muted);margin:0}
+  .action .airec{font-size:10.5px;font-weight:800;color:var(--ai);background:#F3EEFF;border-radius:999px;padding:2px 8px;margin-left:auto}
+
+  .ai-zone{margin:14px 0 4px}
+  .ai-btn{
+    width:100%;border:2px dashed var(--ai);background:#FAF7FF;color:#6D45C4;
+    border-radius:14px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);
+  }
+  .ai-btn:hover{background:#F4EEFF}
+  .ai-box{
+    margin-top:10px;background:#FAF7FF;border:1px solid #E4D9FB;border-radius:14px;
+    padding:13px 15px;display:none;
+  }
+  .ai-box.show{display:block;animation:fade .3s ease}
+  .ai-box .who{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#6D45C4;margin-bottom:6px}
+  .ai-box .bubble{font-size:13.5px;color:#3F2E63;margin:0}
+  .ai-box .note{font-size:11.5px;color:#8B7BB0;margin:8px 0 0;font-weight:700}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .footer-cta{margin-top:16px}
+  .hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px}
+
+  /* ---------- result ---------- */
+  .result-hero{
+    border-radius:24px;color:#fff;text-align:center;padding:26px 20px 24px;
+    background:linear-gradient(150deg,var(--bg-grad-1),var(--bg-grad-2));
+    box-shadow:0 18px 40px rgba(45,63,170,.32);margin-bottom:14px;
+  }
+  .result-hero .rank{font-size:13px;font-weight:800;letter-spacing:.14em;opacity:.9}
+  .result-hero .rankbig{font-size:54px;font-weight:800;line-height:1;margin:4px 0 6px}
+  .result-hero .fin{font-size:15px;opacity:.95}
+  .result-hero .fin b{font-size:20px}
+  .type-card{margin-bottom:14px;text-align:center}
+  .type-card .emoji{font-size:46px;line-height:1}
+  .type-card .tname{font-size:22px;font-weight:800;margin:6px 0 2px;color:var(--ai)}
+  .type-card .tdesc{font-size:14px;color:var(--muted);margin:0 6px}
+  .bridge{
+    border:2px solid var(--brand);background:#F2F7FF;border-radius:18px;
+    padding:18px 17px;margin-bottom:14px;
+  }
+  .bridge h3{margin:0 0 6px;font-size:17px}
+  .bridge p{margin:0 0 12px;font-size:13.5px;color:#37446B}
+  .bridge .info{font-size:13px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px;line-height:1.8}
+  .bridge .info span{color:var(--brand)}
+  .sublinks{display:flex;gap:8px;margin-top:10px}
+  .sublinks a{flex:1;text-align:center;text-decoration:none;font-size:12.5px;font-weight:800;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
+
+  .credit{text-align:center;font-size:11px;color:var(--muted);margin-top:20px;line-height:1.7}
+  .credit a{color:var(--muted)}
+
+  .hidden{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* =======================================================================
+   CONFIG  ―  先生が書き換える場所はここだけ
+   ======================================================================= */
+const CONFIG = {
+  // 結果画面の出前授業バナー
+  schoolName : "○○高校",
+  date       : "○月○日（○）放課後",
+  place      : "○○教室",
+  applyText  : "申し込みは担当の先生まで／ここにQRやURL",
+  applyURL   : "",                       // 申込フォームURL（空ならボタン非表示）
+  // 本家リンク（任意。空にすれば非表示）
+  realGameURL: "https://kozyworks.jp/decision-training/",
+  // ゲーム難易度
+  target     : 520000                    // 売上目標（円）
+};
+
+/* =======================================================================
+   ゲームデータ
+   ======================================================================= */
+const YEN_FACTOR = 7700;
+const BASE = { kya:70, tsu:46, kai:48 }; // 集客高め・サイトは弱い
+
+const TURNS = [
+  {
+    tag:"今月の出来事 ①",
+    title:"ライバル店が大セールを開始！",
+    desc:"お客さんは来てくれてる。でも、なかなか買ってくれない…",
+    q:"店長、最初の一手は？",
+    aiRec:"A",
+    ai:"ライバルがセール中なら、まず<b>広告を増やして来店数を稼ぐ</b>のがセオリーです。Aをおすすめします。",
+    actions:[
+      {id:"A", icon:"📣", t:"広告を増やして人を集める",  d:"とにかく来店数を増やす",            eff:{kya:18}},
+      {id:"B", icon:"🛍️", t:"商品ページを見やすく整理",  d:"迷わず選べるサイトにする",          eff:{tsu:22,kai:6}},
+      {id:"C", icon:"🏷️", t:"値下げセールで対抗",        d:"安さで勝負する（利益は減りがち）",  eff:{kai:16,kya:2}}
+    ]
+  },
+  {
+    tag:"今月の出来事 ②",
+    title:"SNSで商品がちょっとバズった！",
+    desc:"いつもより新しいお客さんが増えそう。取りこぼしたくない。",
+    q:"このチャンス、どう活かす？",
+    aiRec:"A",
+    ai:"バズ中はとにかく露出です。<b>広告をさらに足して</b>波に乗りましょう。Aがおすすめ。",
+    actions:[
+      {id:"A", icon:"📣", t:"広告をさらに増やす",        d:"波が大きいうちに人を集める",        eff:{kya:16}},
+      {id:"B", icon:"⚡", t:"表示を速く・カゴ落ち改善",   d:"来た人を逃さないサイトに",          eff:{tsu:20,kya:4}},
+      {id:"C", icon:"⭐", t:"レビューや人気ランキング表示", d:"買いたい気持ちを後押し",            eff:{kai:20,tsu:4}}
+    ]
+  },
+  {
+    tag:"今月の出来事 ③",
+    title:"年末商戦がやってきた！",
+    desc:"世の中みんなが買い物モード。ラストチャンス。",
+    q:"最後のひと押し、何を打つ？",
+    aiRec:"A",
+    ai:"商戦期はみんなの購買意欲が高い。<b>買いたい度を押し上げる施策</b>が効きます。Aがおすすめ。",
+    actions:[
+      {id:"A", icon:"🎁", t:"まとめ買いクーポン＆おすすめ表示", d:"買いたい度を一気に上げる",      eff:{kai:22,kya:3}},
+      {id:"B", icon:"💬", t:"問い合わせ・決済をスムーズに",     d:"最後の不安をなくす",            eff:{tsu:18}},
+      {id:"C", icon:"📣", t:"広告ラストスパート",             d:"とにかく集客で締める",          eff:{kya:16}}
+    ]
+  }
+];
+
+const METER_INFO = [
+  {key:"kya", name:"集客",       sub:"どれだけ人が来るか", cls:"m-kya"},
+  {key:"tsu", name:"使いやすさ", sub:"サイトの迷いにくさ", cls:"m-tsu"},
+  {key:"kai", name:"買いたい度", sub:"ほしくなる気持ち",   cls:"m-kai"}
+];
+
+/* =======================================================================
+   状態
+   ======================================================================= */
+let state, prevState, turn, log, prevYen;
+
+function clamp(v){ return Math.max(0, Math.min(100, v)); }
+function calcYen(s){
+  const ws = 0.34*s.kya + 0.33*s.tsu + 0.33*s.kai;          // 加重平均
+  const bottleneck = 0.6 + 0.4*(Math.min(s.kya,s.tsu,s.kai)/100); // 弱点が足を引っぱる
+  return Math.round(ws * bottleneck * YEN_FACTOR);
+}
+function yen(n){ return "¥" + n.toLocaleString("ja-JP"); }
+
+function reset(){
+  state = {...BASE};
+  prevState = {...BASE};
+  prevYen = calcYen(state);
+  turn = 0;
+  log = []; // {choice, aiRec, consulted}
+}
+
+/* =======================================================================
+   画面
+   ======================================================================= */
+const app = document.getElementById("app");
+
+function screenStart(){
+  app.innerHTML = `
+    <div class="hero">
+      <span class="badge">5分でわかる・AIと決めるゲーム</span>
+      <h1>店長、<span class="accent">助けて！</span></h1>
+      <p>売上が落ちたネットショップを、3ターンで立て直せ。</p>
+    </div>
+
+    <div class="speech">
+      <div class="who">🧑‍💼 店長</div>
+      <p>半年前まで絶好調だったのに、最近うちのショップ、売上がガタ落ちで…。理由はいくつも絡んでるみたい。キミの判断で立て直してくれ！</p>
+    </div>
+
+    <button class="btn" id="go">ゲームを始める →</button>
+
+    <div class="meta">
+      <span class="pill">⏱ 約5分</span>
+      <span class="pill">🤖 AIに相談できる</span>
+      <span class="pill">🏁 全3ターン</span>
+    </div>
+  `;
+  document.getElementById("go").onclick = ()=>{ reset(); screenTurn(); };
+}
+
+function meterRow(m, val, pop){
+  const popHtml = pop!==undefined
+    ? `<span class="mpop ${pop>0?'up':'flat'} show">${pop>0?'+'+pop:'±0'}</span>` : "";
+  return `
+    <div class="meter ${m.cls}">
+      <div class="head">
+        <span>${m.name}<span style="font-weight:600;color:var(--muted);font-size:11px;margin-left:6px">${m.sub}</span>${popHtml}</span>
+        <span class="v">${val}</span>
+      </div>
+      <div class="track"><div class="fill" data-key="${m.key}" style="width:${val}%"></div></div>
+    </div>`;
+}
+
+function salesBlock(curYen, deltaYen){
+  const goalPct = Math.min(100, Math.round(curYen / CONFIG.target * 100));
+  const markPct = 100; // 目標を右端基準にする
+  let deltaHtml = "";
+  if(deltaYen!==undefined && deltaYen!==0){
+    const up = deltaYen>0;
+    deltaHtml = `<span class="delta ${up?'up':'down'}">${up?'▲ +':'▼ '}${Math.abs(deltaYen).toLocaleString("ja-JP")}</span>`;
+  }
+  return `
+    <div class="card sales">
+      <div class="label">今月の売上</div>
+      <div class="yen num" id="yenNum">${yen(curYen)}${deltaHtml}</div>
+      <div class="salesbar">
+        <div class="salesfill" id="salesfill" style="width:${goalPct}%"></div>
+        <div class="goalmark" style="left:calc(${markPct}% - 2px)"></div>
+      </div>
+      <div class="goaltxt"><span>0</span><span>🎯 目標 ${yen(CONFIG.target)}</span></div>
+    </div>`;
+}
+
+function screenTurn(){
+  const T = TURNS[turn];
+  const curYen = calcYen(state);
+
+  const dots = TURNS.map((_,i)=>{
+    const c = i<turn ? "done" : (i===turn ? "on" : "");
+    return `<span class="dot ${c}"></span>`;
+  }).join("");
+
+  app.innerHTML = `
+    <div class="topbar">
+      <span class="turntag">ターン ${turn+1} / 3</span>
+      <div class="dots">${dots}</div>
+    </div>
+
+    ${salesBlock(curYen)}
+
+    <div class="meters">
+      ${METER_INFO.map(m=>meterRow(m, state[m.key])).join("")}
+    </div>
+
+    <div class="event">
+      <div class="tag">${T.tag}</div>
+      <h3>${T.title}</h3>
+      <p>${T.desc}</p>
+    </div>
+
+    <div class="q">${T.q}</div>
+    <div class="actions">
+      ${T.actions.map(a=>`
+        <button class="action" data-id="${a.id}">
+          <p class="t">${a.icon} ${a.t}</p>
+          <p class="d">${a.d}</p>
+        </button>`).join("")}
+    </div>
+
+    <div class="ai-zone">
+      <button class="ai-btn" id="aiBtn">🤖 AIに相談する（任意）</button>
+      <div class="ai-box" id="aiBox">
+        <div class="who">🤖 AIアシスタント</div>
+        <p class="bubble">${T.ai}</p>
+        <p class="note">※ AIの意見はあくまで参考。決めるのは店長（あなた）です。</p>
+      </div>
+    </div>
+
+    <div class="hint">気になる手を選んでみよう。正解は1つじゃない。</div>
+  `;
+
+  let consulted = false;
+  document.getElementById("aiBtn").onclick = (e)=>{
+    document.getElementById("aiBox").classList.add("show");
+    e.currentTarget.style.display = "none";
+    consulted = true;
+  };
+
+  app.querySelectorAll(".action").forEach(btn=>{
+    btn.onclick = ()=> chooseAction(btn.dataset.id, consulted);
+  });
+}
+
+function chooseAction(id, consulted){
+  const T = TURNS[turn];
+  const act = T.actions.find(a=>a.id===id);
+
+  prevState = {...state};
+  const before = calcYen(state);
+
+  // 効果適用
+  const pops = {};
+  for(const k of ["kya","tsu","kai"]){
+    const d = act.eff[k] || 0;
+    pops[k] = d;
+    state[k] = clamp(state[k] + d);
+  }
+  const after = calcYen(state);
+
+  log.push({ choice:id, aiRec:T.aiRec, consulted });
+
+  screenResolve(before, after, pops);
+}
+
+function screenResolve(before, after, pops){
+  const deltaYen = after - before;
+  const curYen = after;
+
+  // フィードバック文（弱点を埋めたか）
+  const minKey = ["kya","tsu","kai"].reduce((a,b)=> prevState[a]<prevState[b]?a:b);
+  const fixedWeak = (pops[minKey]||0) > 0;
+  let fb;
+  if(deltaYen >= 50000) fb = "いいね！売上がしっかり伸びた。弱いところを補えたみたいだ。";
+  else if(deltaYen >= 15000) fb = "前進。ただ、もっと伸びる余地がありそう。";
+  else fb = "うーん、思ったより伸びなかった。今いちばん弱いのはどこだろう？";
+
+  const dots = TURNS.map((_,i)=>{
+    const c = i<=turn ? "done" : "";
+    return `<span class="dot ${c}"></span>`;
+  }).join("");
+
+  app.innerHTML = `
+    <div class="topbar">
+      <span class="turntag">ターン ${turn+1} の結果</span>
+      <div class="dots">${dots}</div>
+    </div>
+
+    ${salesBlock(before)}
+
+    <div class="meters">
+      ${METER_INFO.map(m=>meterRow(m, prevState[m.key], pops[m.key])).join("")}
+    </div>
+
+    <div class="card" style="margin:12px 0;border-left:5px solid var(--brand)">
+      <p style="margin:0;font-size:14px;font-weight:700">${fb}</p>
+    </div>
+
+    <button class="btn" id="next">${turn>=2 ? "結果を見る 🏁" : "次のターンへ →"}</button>
+  `;
+
+  // アニメーション：少し遅らせて売上＆メーターを更新
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      // メーター
+      METER_INFO.forEach(m=>{
+        const fill = app.querySelector(`.fill[data-key="${m.key}"]`);
+        if(fill) fill.style.width = state[m.key] + "%";
+        const v = fill?.closest(".meter")?.querySelector(".v");
+        if(v) animateNumber(v, prevState[m.key], state[m.key], 700, "");
+      });
+      // 売上
+      const fill = document.getElementById("salesfill");
+      if(fill) fill.style.width = Math.min(100, Math.round(curYen/CONFIG.target*100)) + "%";
+      const yenEl = document.getElementById("yenNum");
+      if(yenEl){
+        const up = deltaYen>0;
+        const dh = deltaYen!==0
+          ? ` <span class="delta ${up?'up':'down'}">${up?'▲ +':'▼ '}${Math.abs(deltaYen).toLocaleString("ja-JP")}</span>` : "";
+        animateNumber(yenEl, before, curYen, 800, "¥", dh);
+      }
+    }, 260);
+  });
+
+  document.getElementById("next").onclick = ()=>{
+    turn++;
+    prevYen = curYen;
+    if(turn>=3) screenResult();
+    else screenTurn();
+  };
+}
+
+function animateNumber(el, from, to, dur, prefix="", suffixHtml=""){
+  const start = performance.now();
+  function step(now){
+    const p = Math.min(1, (now-start)/dur);
+    const ease = 1-Math.pow(1-p,3);
+    const val = Math.round(from + (to-from)*ease);
+    el.innerHTML = prefix + val.toLocaleString("ja-JP") + suffixHtml;
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* =======================================================================
+   結果＆診断
+   ======================================================================= */
+function diagnose(){
+  const finalYen = calcYen(state);
+  const cleared = finalYen >= CONFIG.target;
+  const consultCount = log.filter(l=>l.consulted).length;
+  const agreeCount   = log.filter(l=>l.choice===l.aiRec).length;
+  const minMeter = Math.min(state.kya, state.tsu, state.kai);
+  const balanced = minMeter >= 65;
+
+  let type;
+  if(cleared && balanced){
+    type = {
+      emoji:"📊", name:"冷静なデータ分析タイプ",
+      desc:"弱いところを見抜いて的確に手を打てた。数字の裏側を読む力がある。これはまさにデータ分析の才能。"
+    };
+  } else if(agreeCount>=2){
+    type = {
+      emoji:"🌱", name:"伸びしろ大！スポンジタイプ",
+      desc:"AIや人のアドバイスを素直に取り入れられる強み。次は「AIと違う手」をあえて選ぶと、一気に伸びる。"
+    };
+  } else if(consultCount<=1){
+    type = {
+      emoji:"🚀", name:"直感を信じる開拓者タイプ",
+      desc:"自分の判断でズバッと決める度胸がある。あとはAIを“使い分け”られると、判断の精度がさらに上がる。"
+    };
+  } else {
+    type = {
+      emoji:"🦉", name:"AIを使いこなす賢者タイプ",
+      desc:"AIに聞いたうえで、鵜呑みにせず自分で決めた。AI時代にいちばん必要な「最終判断する力」を持ってる。"
+    };
+  }
+
+  // ランク
+  const ratio = finalYen / CONFIG.target;
+  let rank;
+  if(ratio>=1.05) rank="S";
+  else if(ratio>=1.0) rank="A";
+  else if(ratio>=0.9) rank="B";
+  else rank="C";
+
+  return {finalYen, cleared, type, rank};
+}
+
+function screenResult(){
+  const r = diagnose();
+  const headline = r.cleared
+    ? "目標達成！店長も大喜びだ 🎉"
+    : "あと少し！惜しかった…";
+
+  const realLink = CONFIG.realGameURL
+    ? `<a href="${CONFIG.realGameURL}" target="_blank" rel="noopener">本物のゲームを見る</a>` : "";
+  const applyBtn = CONFIG.applyURL
+    ? `<a href="${CONFIG.applyURL}" target="_blank" rel="noopener" class="btn" style="text-decoration:none;margin-top:4px">出前授業に申し込む →</a>` : "";
+
+  app.innerHTML = `
+    <div class="result-hero">
+      <div class="rank">YOUR RANK</div>
+      <div class="rankbig">${r.rank}</div>
+      <div class="fin">${headline}<br>最終売上 <b class="num">${yen(r.finalYen)}</b></div>
+    </div>
+
+    <div class="card type-card">
+      <div class="eyebrow">あなたの意思決定タイプ</div>
+      <div class="emoji">${r.type.emoji}</div>
+      <div class="tname">${r.type.name}</div>
+      <p class="tdesc">${r.type.desc}</p>
+    </div>
+
+    <div class="bridge">
+      <h3>🎓 これは、ほんの“入口”です</h3>
+      <p>本物のゲームでは、AIに<b>「何を・どう伝えるか」</b>まで自分で設計します。<br>その続きは ―― 出前授業で体験できます。</p>
+      <div class="info">
+        🏫 <span>${CONFIG.schoolName}</span> で開催<br>
+        📅 ${CONFIG.date}<br>
+        📍 ${CONFIG.place}<br>
+        ✏️ ${CONFIG.applyText}
+      </div>
+      ${applyBtn}
+      <div class="sublinks">
+        <a href="#" id="again">もう一度あそぶ ↺</a>
+        ${realLink}
+      </div>
+    </div>
+
+    <p class="credit">
+      AI・デジタルビジネス学科 × WEB ANALYTICS IMPROVEMENT GAME<br>
+      ゲームルール © KozyWorks
+    </p>
+  `;
+
+  document.getElementById("again").onclick = (e)=>{
+    e.preventDefault(); reset(); screenStart();
+  };
+}
+
+/* start */
+screenStart();
+</script>
+</body>
+</html>
