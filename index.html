@@ -163,6 +163,7 @@
   .action .t{font-size:15px;font-weight:800;margin:0 0 2px;display:flex;align-items:center;gap:7px}
   .action .d{font-size:12.5px;color:var(--muted);margin:0}
   .action .airec{font-size:10.5px;font-weight:800;color:var(--ai);background:#F3EEFF;border-radius:999px;padding:2px 8px;margin-left:auto}
+  .action .aid{flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:8px;font-size:13px;font-weight:800;color:#fff;background:var(--brand);font-family:var(--mono)}
 
   .ai-zone{margin:14px 0 4px}
   .ai-btn{
@@ -407,7 +408,7 @@ function screenTurn(){
     <div class="actions">
       ${T.actions.map(a=>`
         <button class="action" data-id="${a.id}">
-          <p class="t">${a.icon} ${a.t}</p>
+          <p class="t"><span class="aid">${a.id}</span> ${a.icon} ${a.t}</p>
           <p class="d">${a.d}</p>
         </button>`).join("")}
     </div>
@@ -590,7 +591,7 @@ function screenResult(){
   const realLink = CONFIG.realGameURL
     ? `<a href="${CONFIG.realGameURL}" target="_blank" rel="noopener">本物のゲームを見る</a>` : "";
   const applyBtn = CONFIG.applyURL
-    ? `<a href="${CONFIG.applyURL}" target="_blank" rel="noopener" class="btn" style="text-decoration:none;margin-top:4px">出前授業に申し込む →</a>` : "";
+    ? `<a href="${CONFIG.applyURL}" target="_blank" rel="noopener" class="btn" style="text-decoration:none;margin-top:4px">OC・授業について問い合わせる →</a>` : "";
 
   app.innerHTML = `
     <div class="result-hero">
@@ -608,12 +609,10 @@ function screenResult(){
 
     <div class="bridge">
       <h3>🎓 これは、ほんの“入口”です</h3>
-      <p>本物のゲームでは、AIに<b>「何を・どう伝えるか」</b>まで自分で設計します。<br>その続きは ―― 出前授業で体験できます。</p>
+      <p>本物のゲームでは、AIに<b>「何を・どう伝えるか」</b>まで自分で設計します。<br>その続きは ―― OCや高校での出張授業で体験できます。</p>
       <div class="info">
-        🏫 <span>${CONFIG.schoolName}</span> で開催<br>
-        📅 ${CONFIG.date}<br>
-        📍 ${CONFIG.place}<br>
-        ✏️ ${CONFIG.applyText}
+        🎓 正式なゲームの概要や、<span>日本経済大学 AI・DB学科</span>のことを知れます。<br>
+        🏫 OC（オープンキャンパス）や高校での<b>出張授業（無償）</b>があります。
       </div>
       ${applyBtn}
       <div class="sublinks">
