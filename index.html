@@ -207,6 +207,7 @@
   .bridge p{margin:0 0 12px;font-size:13.5px;color:#37446B}
   .bridge .info{font-size:13px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px;line-height:1.8}
   .bridge .info span{color:var(--brand)}
+  .bridge .info a{color:var(--brand);font-weight:800;text-decoration:underline;text-underline-offset:2px}
   .sublinks{display:flex;gap:8px;margin-top:10px}
   .sublinks a{flex:1;text-align:center;text-decoration:none;font-size:12.5px;font-weight:800;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
 
@@ -591,7 +592,7 @@ function screenResult(){
   const realLink = CONFIG.realGameURL
     ? `<a href="${CONFIG.realGameURL}" target="_blank" rel="noopener">本物のゲームを見る</a>` : "";
   const applyBtn = CONFIG.applyURL
-    ? `<a href="${CONFIG.applyURL}" target="_blank" rel="noopener" class="btn" style="text-decoration:none;margin-top:4px">OC・授業について問い合わせる →</a>` : "";
+    ? `<a href="${CONFIG.applyURL}" target="_blank" rel="noopener" class="btn" style="text-decoration:none;margin-top:4px">オープンキャンパス・授業について問い合わせる →</a>` : "";
 
   app.innerHTML = `
     <div class="result-hero">
@@ -609,10 +610,10 @@ function screenResult(){
 
     <div class="bridge">
       <h3>🎓 これは、ほんの“入口”です</h3>
-      <p>本物のゲームでは、AIに<b>「何を・どう伝えるか」</b>まで自分で設計します。<br>その続きは ―― OCや高校での出張授業で体験できます。</p>
+      <p>本物のゲームでは、AIに<b>「何を・どう伝えるか」</b>まで自分で設計します。<br>その続きは ―― オープンキャンパスや高校での出張授業で体験できます。</p>
       <div class="info">
-        🎓 正式なゲームの概要や、<span>日本経済大学 AI・DB学科</span>のことを知れます。<br>
-        🏫 OC（オープンキャンパス）や高校での<b>出張授業（無償）</b>があります。
+        🎓 正式なゲームの概要や、<a href="https://shibuya.jue.ac.jp/lp/digital-business-management/" target="_blank" rel="noopener">日本経済大学 AI・DB学科</a>のことを知れます。<br>
+        🏫 オープンキャンパスや高校での<b>出張授業（無償）</b>があります。
       </div>
       ${applyBtn}
       <div class="sublinks">
