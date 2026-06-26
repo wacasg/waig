@@ -245,7 +245,13 @@ const CONFIG = {
    ゲームデータ
    ======================================================================= */
 const YEN_FACTOR = 7700;
-const BASE = { kya:70, tsu:46, kai:48 }; // 集客高め・サイトは弱い
+// 開始時の市場はゲームごとに変化（強み・弱みの構成がランダム）。全体水準は元の 70/46/48 と同程度。
+function startMarket(){
+  const rnd = (min,max)=> Math.floor(min + Math.random()*(max-min+1));
+  const vals = [rnd(62,74), rnd(44,55), rnd(42,53)];                 // 1つ強め＋2つ弱めの傾向は維持
+  for(let i=vals.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [vals[i],vals[j]]=[vals[j],vals[i]]; } // どのメーターが強み/弱みかをシャッフル
+  return { kya:vals[0], tsu:vals[1], kai:vals[2] };
+}
 
 const TURNS = [
   {
@@ -309,8 +315,8 @@ function calcYen(s){
 function yen(n){ return "¥" + n.toLocaleString("ja-JP"); }
 
 function reset(){
-  state = {...BASE};
-  prevState = {...BASE};
+  state = startMarket();
+  prevState = {...state};
   prevYen = calcYen(state);
   turn = 0;
   log = []; // {choice, aiRec, consulted}
