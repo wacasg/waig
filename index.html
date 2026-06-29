@@ -211,6 +211,39 @@
   .sublinks{display:flex;gap:8px;margin-top:10px}
   .sublinks a{flex:1;text-align:center;text-decoration:none;font-size:12.5px;font-weight:800;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
 
+  /* なぜこの結果か（#1 ボトルネック解説） */
+  .whybox{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--brand);
+    border-radius:12px;padding:13px 15px;margin-bottom:14px;
+    font-size:13.5px;line-height:1.7;color:#37446B;
+  }
+  .whybox .wlabel{font-size:11.5px;font-weight:800;color:var(--brand);letter-spacing:.04em;display:block;margin-bottom:3px}
+  .whybox b{color:var(--ink)}
+
+  /* 授業でできること（#4） */
+  .can-do{margin:0 0 12px}
+  .can-do .cd-h{font-size:13px;font-weight:800;color:var(--ink);margin:0 0 7px}
+  .can-do ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+  .can-do li{
+    display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:700;
+    color:#37446B;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+  }
+  .can-do li .cd-ico{flex:none}
+
+  /* 教員/生徒の2導線CTA（#3） */
+  .cta-dual{display:grid;gap:9px;margin-top:4px}
+  .cta-dual .cta{
+    display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;
+    border-radius:14px;padding:12px 14px;font-weight:800;line-height:1.35;text-align:center;
+  }
+  .cta-dual .cta .role{font-size:11.5px;font-weight:800;opacity:.85}
+  .cta-dual .cta .act{font-size:15px}
+  .cta-dual .cta.teacher{color:#fff;background:var(--brand);box-shadow:0 6px 16px rgba(45,108,223,.30)}
+  .cta-dual .cta.student{color:var(--brand);background:#fff;border:2px solid var(--brand)}
+
+  /* リプレイ促し（#6） */
+  .replay-tip{font-size:12px;font-weight:700;color:var(--muted);text-align:center;margin:14px 0 4px;line-height:1.6}
+
   .credit{text-align:center;font-size:11px;color:var(--muted);margin-top:20px;line-height:1.7}
   .credit a{color:var(--muted)}
 
@@ -235,6 +268,9 @@ const CONFIG = {
   place      : "○○教室",
   applyText  : "申し込みは担当の先生まで／ここにQRやURL",
   applyURL   : "https://forms.gle/x6G5tob4ekWYkhop9",                       // 申込フォームURL（空ならボタン非表示）
+  // 結果画面の2導線（空なら applyURL を使用）
+  teacherURL : "",                       // 高校教員向け「出張講座を相談する」遷移先
+  studentURL : "",                       // 高校生向け「オープンキャンパスを見る」遷移先
   // 本家リンク（任意。空にすれば非表示）
   realGameURL: "https://kozyworks.jp/decision-training/",
   // ゲーム難易度
@@ -425,9 +461,9 @@ const app = document.getElementById("app");
 function screenStart(){
   app.innerHTML = `
     <div class="hero">
-      <span class="badge">5分でわかる・AIと決めるゲーム</span>
+      <span class="badge">5分で体験：AI × データ分析 × ネットショップ経営</span>
       <h1>店長、<span class="accent">助けて！</span></h1>
-      <p>売上が落ちたネットショップを、3ターンで立て直せ。</p>
+      <p>売上が落ちたネットショップを、3ターンで立て直せ。<br>「AIと一緒に決める」を体験できる、学科のミニゲームです。</p>
     </div>
 
     <div class="speech">
@@ -684,22 +720,66 @@ function diagnose(){
   return {finalYen, cleared, type, rank};
 }
 
+/* なぜこの結果になったか（calcYen のボトルネック＝最小メーターを言語化）*/
+const MNAME = {kya:"集客", tsu:"使いやすさ", kai:"買いたい度"};
+const WEAK_REASON = {
+  kya:"来店してくれる人を増やしきれず、そもそものお客さんの数が足りませんでした。",
+  tsu:"サイトの使いやすさが弱く、迷ったお客さんが途中で離れてしまいました。",
+  kai:"「買いたい」という気持ちを高めきれず、購入の直前で離脱されてしまいました。"
+};
+function resultReason(s, cleared, balanced){
+  let weak="kya", min=Infinity, strong="kya", max=-Infinity;
+  for(const k of ["kya","tsu","kai"]){
+    if(s[k]<min){min=s[k];weak=k;}
+    if(s[k]>max){max=s[k];strong=k;}
+  }
+  if(cleared && balanced)
+    return "3つの力を<b>バランスよく</b>伸ばせたのが勝因。弱点をつくらなかったのが大きいです。";
+  if(cleared)
+    return `<b>${MNAME[strong]}</b>を中心に伸ばして目標に到達。ただ<b>${MNAME[weak]}</b>は手薄で、まだ伸びしろがありました。`;
+  if(max - min >= 25)
+    return `<b>${MNAME[strong]}</b>に力が偏りました。その分、${WEAK_REASON[weak]}`;
+  return WEAK_REASON[weak];
+}
+
 function screenResult(){
   const r = diagnose();
+  const balanced = Math.min(state.kya, state.tsu, state.kai) >= 65;
+  const why = resultReason(state, r.cleared, balanced);
   const headline = r.cleared
     ? "目標達成！店長も大喜びだ 🎉"
     : "あと少し！惜しかった…";
 
   const realLink = CONFIG.realGameURL
     ? `<a href="${CONFIG.realGameURL}" target="_blank" rel="noopener">本物のゲームを見る</a>` : "";
-  const applyBtn = CONFIG.applyURL
-    ? `<a href="${CONFIG.applyURL}" target="_blank" rel="noopener" class="btn" style="text-decoration:none;margin-top:4px">オープンキャンパス・授業について問い合わせる →</a>` : "";
+  // 2導線CTA（teacherURL/studentURL が空なら applyURL を使用）
+  const teacherURL = CONFIG.teacherURL || CONFIG.applyURL;
+  const studentURL = CONFIG.studentURL || CONFIG.applyURL;
+  const ctaDual = (teacherURL || studentURL) ? `
+      <div class="cta-dual">
+        ${teacherURL ? `<a class="cta teacher" href="${teacherURL}" target="_blank" rel="noopener"><span class="role">🏫 高校教員の方</span><span class="act">出張講座を相談する →</span></a>` : ""}
+        ${studentURL ? `<a class="cta student" href="${studentURL}" target="_blank" rel="noopener"><span class="role">🎓 高校生の方</span><span class="act">オープンキャンパスを見る →</span></a>` : ""}
+      </div>` : "";
+  const canDo = `
+      <div class="can-do">
+        <p class="cd-h">📚 授業（出張講座）でできること</p>
+        <ul>
+          <li><span class="cd-ico">🤖</span>AIへの相談文を、自分の言葉でつくる</li>
+          <li><span class="cd-ico">📊</span>売上データから「弱点」を見つける</li>
+          <li><span class="cd-ico">🤝</span>チームで施策を出し合い、くらべる</li>
+        </ul>
+      </div>`;
 
   app.innerHTML = `
     <div class="result-hero">
       <div class="rank">YOUR RANK</div>
       <div class="rankbig">${r.rank}</div>
       <div class="fin">${headline}<br>最終売上 <b class="num">${yen(r.finalYen)}</b></div>
+    </div>
+
+    <div class="whybox">
+      <span class="wlabel">📌 なぜ、この結果に？</span>
+      ${why}
     </div>
 
     <div class="card type-card">
@@ -716,9 +796,11 @@ function screenResult(){
         🎓 正式なゲームの概要や、<a href="https://shibuya.jue.ac.jp/lp/digital-business-management/" target="_blank" rel="noopener">日本経済大学 AI・DB学科</a>のことを知れます。<br>
         🏫 オープンキャンパスや高校での<b>出張授業（無償）</b>があります。
       </div>
-      ${applyBtn}
+      ${canDo}
+      ${ctaDual}
+      <div class="replay-tip">🔁 ゲームの引きはランダム。次は<b>AIと違う手</b>や、<b>別の課題パターン</b>でもう一度ためしてみよう。</div>
       <div class="sublinks">
-        <a href="#" id="again">もう一度あそぶ ↺</a>
+        <a href="#" id="again">↺ もう一度あそぶ</a>
         ${realLink}
       </div>
     </div>
