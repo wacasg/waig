@@ -1,2 +1,6 @@
-.claude/
 .DS_Store
+
+# .claude/ はチームで共有する（agents / commands / skills / hooks / settings.json）。
+# ただし各自ローカル専用のものは除外する。
+.claude/settings.local.json
+.claude/state/

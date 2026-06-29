@@ -1,0 +1,9 @@
+{
+  "_comment": "WAIG プロジェクト用 MCP。ゲームの自動プレイテスト/スクショ用に Playwright を同梱（npx 起動・追加インストール不要）。プレビューは Claude_Preview、運用解析は google-analytics（いずれも接続済みを利用）。",
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest", "--headless", "--isolated"]
+    }
+  }
+}
